@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ToWatch</string>
+    <string name="add_movie">Aggiungi Film</string>
+    <string name="list_movies">Elenco Film</string>
+    <string name="home_subtitle_1">Bentornato, %s!</string>
+    <string name="home_subtitle_2">Cosa guardi oggi, %s?</string>
+</resources>

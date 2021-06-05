@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">ToWatch</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="add_movie">Add Movie</string>
+    <string name="list_movies">List movies</string>
+    <string name="home_subtitle_1">Welcome back, %s!</string>
+    <string name="home_subtitle_2">What are you watching today, %s?</string>
+    <string name="no_movie_name">Name</string>
+    <string name="search">Search...</string>
+</resources>
