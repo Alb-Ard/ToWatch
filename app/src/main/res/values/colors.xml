@@ -8,6 +8,7 @@
     <color name="blue_light">#68B8F8</color>
     <color name="blue_light_alt">#2196F3</color>
     <color name="blue_dark">#1B78C1</color>
+    <color name="blue_darker">#0D66AC</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

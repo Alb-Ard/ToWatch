@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
+import com.albard.towatch.utilities.ActionBarSetup;
 import com.albard.towatch.utilities.Fragments;
 
 public class HomeFragment extends Fragment {
@@ -30,11 +31,26 @@ public class HomeFragment extends Fragment {
             return;
         }
 
+        ActionBarSetup.setBackButtonEnabled(activity, false);
+
         this.subtitleTextView = new RandomTextView(view.findViewById(R.id.homeFragment_subtitle_textView))
                 .addValue(activity.getString(R.string.home_subtitle_1))
                 .addValue(activity.getString(R.string.home_subtitle_2));
         this.subtitleTextView.extract("User");
 
-        view.findViewById(R.id.homeFragment_addMovie_button).setOnClickListener(v -> Fragments.switchFragments(activity, R.id.mainActivity_parent_containerView, new EditMovieFragment(), null));
+        view.findViewById(R.id.homeFragment_addMovie_button).setOnClickListener(v ->
+                Fragments.switchFragments(activity,
+                        R.id.mainActivity_parent_containerView,
+                        new EditMovieFragment(null),
+                        Fragments.getTransactionName(this, "TO_EDIT"),
+                        null)
+        );
+        view.findViewById(R.id.homeFragment_listMovies_button).setOnClickListener(v ->
+                Fragments.switchFragments(activity,
+                        R.id.mainActivity_parent_containerView,
+                        new ListMoviesFragment(activity),
+                        Fragments.getTransactionName(this, "TO_LIST"),
+                        null)
+        );
     }
 }

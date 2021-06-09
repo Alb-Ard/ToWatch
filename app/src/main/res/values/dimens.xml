@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="spacing_top">150dp</dimen>
+    <dimen name="spacing_top">50dp</dimen>
     <dimen name="spacing_horizontal">50dp</dimen>
 </resources>

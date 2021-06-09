@@ -1,52 +1,76 @@
 package com.albard.towatch.moviesapi;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.albard.towatch.database.Movie;
+import com.albard.towatch.utilities.NetworkStatusHelper;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import info.movito.themoviedbapi.TmdbApi;
-import info.movito.themoviedbapi.TmdbSearch;
+import info.movito.themoviedbapi.model.Artwork;
 import info.movito.themoviedbapi.model.MovieDb;
-import info.movito.themoviedbapi.model.core.MovieResultsPage;
+import info.movito.themoviedbapi.model.MovieImages;
 
-public class TmdbMoviesProvider implements MoviesProvider {
-    private static final int CACHED_TIME_MILLIS = 120 * 1000;
+public class TmdbMoviesProvider extends MoviesProvider {
+    private static final String IMAGE_URI_SIZE = "w500";
 
+    private final ExecutorService executor;
     private final TmdbApi api;
 
-    private Date cachedMoviesExpireDate;
-    private TmdbSearch cachedMovies;
-
-    public TmdbMoviesProvider(@NonNull final String apiKey)
-    {
-        this.api = new TmdbApi(apiKey);
+    public TmdbMoviesProvider(@NonNull final String apiKey) {
+        this.executor = Executors.newSingleThreadExecutor();
+        try {
+            this.api = this.executor.submit(() -> new TmdbApi(apiKey)).get();
+        } catch (final ExecutionException | InterruptedException e) {
+            throw new RuntimeException("Couldn't initialize TMDb api", e);
+        }
     }
 
-    @NonNull
+    @Nullable
     @Override
-    public List<MovieReply> request(@NonNull final String name, final boolean includeAdult) {
-        final TmdbSearch search = this.getSearch();
-        final MovieResultsPage results = search.searchMovie(name,
-                0,
-                null,
-                includeAdult,
-                0);
-        final List<MovieDb> movies = results.getResults();
-        final List<MovieReply> rv = new ArrayList<>();
-        for (MovieDb movie : movies) {
-            rv.add(new MovieReply(movie.getTitle()));
+    public List<Movie> request(@NonNull final String name, final boolean includeAdult) {
+        if (!NetworkStatusHelper.getSingleton().isConnected()) {
+            NetworkStatusHelper.getSingleton().showRequestDialog();
+            return null;
         }
-        return rv;
-    }
 
-    private TmdbSearch getSearch() {
-        if (this.cachedMovies != null && new Date().after(this.cachedMoviesExpireDate)) {
-            return this.cachedMovies;
+        try {
+            final List<MovieDb> movies = this.executor.submit(() -> TmdbMoviesProvider.this.api.getSearch().searchMovie(name,
+                    0,
+                    null,
+                    includeAdult,
+                    0).getResults())
+                    .get();
+            final List<Movie> rv = new ArrayList<>();
+            for (final MovieDb dbMovie : movies) {
+                final Movie movie = new Movie(dbMovie.getTitle());
+                movie.setDescription(dbMovie.getOverview());
+                movie.setDbId(dbMovie.getId());
+                final Artwork poster = this.executor.submit(() -> {
+                    final MovieImages images = TmdbMoviesProvider.this.api.getMovies().getImages(dbMovie.getId(), null);
+                    final List<Artwork> posters = images.getPosters();
+                    if (posters == null || posters.size() == 0) {
+                        return null;
+                    }
+
+                    return posters.get(0);
+                }).get();
+                if (poster != null) {
+                    final String posterUri = this.api.getConfiguration().getBaseUrl() + TmdbMoviesProvider.IMAGE_URI_SIZE + poster.getFilePath();
+                    movie.setImageUri(posterUri);
+                }
+                rv.add(movie);
+            }
+            return rv;
+        } catch (final ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+            return null;
         }
-        this.cachedMovies = this.api.getSearch();
-        this.cachedMoviesExpireDate = new Date(System.currentTimeMillis() + TmdbMoviesProvider.CACHED_TIME_MILLIS);
-        return this.cachedMovies;
     }
 }
