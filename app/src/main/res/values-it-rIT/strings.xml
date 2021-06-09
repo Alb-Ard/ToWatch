@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ToWatch</string>
+    <string name="add_movie">Aggiungi Film</string>
+    <string name="list_movies">Elenco Film</string>
+    <string name="home_subtitle_1">Bentornato, %s!</string>
+    <string name="home_subtitle_2">Cosa guardi oggi, %s?</string>
+    <string name="search">Cerca...</string>
+    <string name="movie_name">Nome del Film</string>
+    <string name="filter_adult_content">Filtra contenuti per adulti</string>
+    <string name="confirm">Conferma</string>
+    <string name="name_label">Nome:</string>
+    <string name="no_image_found">Nessuna immagine trovata</string>
+    <string name="movie_description">Descrizione del Film</string>
+    <string name="back">Indietro</string>
+    <string name="edit">Modifica</string>
+    <string name="movie_image">Immagine del Film</string>
+    <string name="welcome">Benvenuto!</string>
+    <string name="description_label">Descrizione:</string>
+</resources>

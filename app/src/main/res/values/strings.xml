@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">ToWatch</string>
+    <string name="add_movie">Add Movie</string>
+    <string name="list_movies">List movies</string>
+    <string name="home_subtitle_1">Welcome back, %s!</string>
+    <string name="home_subtitle_2">What are you watching today, %s?</string>
+    <string name="search">Search...</string>
+    <string name="movie_name">Movie Name</string>
+    <string name="filter_adult_content">Filter adult content</string>
+    <string name="confirm">Confirm</string>
+    <string name="name_label">Name:</string>
+    <string name="no_image_found">No Image Found</string>
+    <string name="movie_description">Movie Description</string>
+    <string name="back">Back</string>
+    <string name="edit">Edit</string>
+    <string name="movie_image">Movie Image</string>
+    <string name="welcome">Welcome!</string>
+    <string name="description_label">Description:</string>
+    <string name="no_results_found">No results found</string>
+    <string name="set_as_seen">Set as Seen</string>
+    <string name="delete">Delete</string>
+</resources>
