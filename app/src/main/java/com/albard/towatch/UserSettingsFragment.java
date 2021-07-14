@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,11 +15,14 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
 import com.albard.towatch.settings.UserSettings;
+import com.google.android.material.textfield.TextInputLayout;
 
 public class UserSettingsFragment extends Fragment {
     private UserSettings userSettings;
 
     private CheckBox adultFilterCheckBox;
+    private TextInputLayout userNameTextLayout;
+    private EditText userNameEditText;
 
     @Nullable
     @Override
@@ -37,12 +41,27 @@ public class UserSettingsFragment extends Fragment {
 
         this.userSettings = new UserSettings(activity);
 
+        this.userNameEditText = view.findViewById(R.id.userSettingsFragment_userName_editText);
+        this.userNameEditText.setText(this.getUserSettings().getUserName());
+
+        this.userNameTextLayout = view.findViewById(R.id.userSettingsFragment_userName_textLayout);
+        this.userNameTextLayout.setError(this.getString(R.string.invalid_name));
+        this.userNameTextLayout.setErrorEnabled(false);
+
         this.adultFilterCheckBox = view.findViewById(R.id.userSettingsFragment_filterAdult_checkBox);
         this.adultFilterCheckBox.setChecked(this.getUserSettings().getAdultFilter());
     }
 
-    protected void applySettings() {
-        this.getUserSettings().applySettings(this.adultFilterCheckBox.isChecked());
+    protected boolean applySettings() {
+        final String name = this.userNameEditText.getText().toString();
+        if (name == null || name.length() == 0) {
+            this.userNameTextLayout.setErrorEnabled(true);
+            return false;
+        }
+        this.userNameTextLayout.setErrorEnabled(false);
+
+        this.getUserSettings().applySettings(this.adultFilterCheckBox.isChecked(), this.userNameEditText.getText().toString());
+        return true;
     }
 
     protected UserSettings getUserSettings() {

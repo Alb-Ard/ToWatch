@@ -1,7 +1,9 @@
 package com.albard.towatch;
 
 import android.os.Bundle;
+import android.view.MenuItem;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -24,5 +26,21 @@ public class FirstStartActivity extends AppCompatActivity {
         Fragments.switchFragments(this,
                 R.id.firstStartActivity_parent_containerView,
                 new FirstStartFragment());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        this.finish();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
+        if (item.getItemId() == R.id.detailsMenu_settings_menuItem) {
+            SettingsActivity.launch(this);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }

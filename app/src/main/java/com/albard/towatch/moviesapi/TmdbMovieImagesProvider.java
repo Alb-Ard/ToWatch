@@ -1,14 +1,13 @@
 package com.albard.towatch.moviesapi;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.albard.towatch.database.Movie;
+import com.albard.towatch.utilities.Dialogs;
 import com.albard.towatch.utilities.NetworkStatusHelper;
 
 import org.apache.http.HttpResponse;
@@ -32,11 +31,6 @@ public class TmdbMovieImagesProvider extends MovieImagesProvider {
     @Nullable
     @Override
     public Bitmap request(@NonNull final Movie movie) {
-        if (!NetworkStatusHelper.getSingleton().isConnected()) {
-            NetworkStatusHelper.getSingleton().showRequestDialog();
-            return null;
-        }
-
         try {
             return this.executor.submit(() -> {
                 final HttpClient httpClient = new DefaultHttpClient();

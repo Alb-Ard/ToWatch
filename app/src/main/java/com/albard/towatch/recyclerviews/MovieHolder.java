@@ -14,9 +14,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.albard.towatch.R;
 import com.albard.towatch.database.Movie;
 import com.albard.towatch.database.MovieImagesRepository;
+import com.albard.towatch.utilities.NetworkStatusHelper;
 
 public class MovieHolder extends RecyclerView.ViewHolder {
     private final TextView nameTextView;
+    private final ImageView seenImageView;
     private final ImageView posterImageView;
     private final TextView noImageTextView;
 
@@ -30,6 +32,7 @@ public class MovieHolder extends RecyclerView.ViewHolder {
     public MovieHolder(@NonNull final View itemView) {
         super(itemView);
         this.nameTextView = itemView.findViewById(R.id.itemMovie_movieName_textView);
+        this.seenImageView = itemView.findViewById(R.id.itemMovie_seen_imageView);
         this.posterImageView = itemView.findViewById(R.id.itemMovie_movieImage_imageView);
         this.noImageTextView = itemView.findViewById(R.id.itemMovie_noImage_textView);
     }
@@ -38,8 +41,9 @@ public class MovieHolder extends RecyclerView.ViewHolder {
         this.movie = movie;
 
         this.nameTextView.setText(movie.getName());
+        this.seenImageView.setVisibility(movie.getSeen() ? View.VISIBLE : View.GONE);
 
-        final Bitmap image = MovieImagesRepository.getSingleton().getMoviePoster(movie);
+        final Bitmap image = MovieImagesRepository.getSingleton().getMoviePoster(movie, NetworkStatusHelper.getContextSingleton().isConnected());
         if (image == null) {
             this.posterImageView.setVisibility(View.GONE);
             this.noImageTextView.setVisibility(View.VISIBLE);

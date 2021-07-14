@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.albard.towatch">
 
+    <uses-sdk tools:overrideLibrary="com.google.zxing.client.android" />
+    <uses-feature android:required="false" android:name="camera2" />
+
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <queries>
@@ -15,15 +21,18 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.ToWatch">
+        android:theme="@style/Theme.ToWatch"
+        android:hardwareAccelerated="true">
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".FirstStartActivity">
-        </activity>
+        <activity android:name=".FirstStartActivity" />
+        <activity android:name=".SetMovieSeenActivity" />
+        <activity android:name=".SettingsActivity" />
+        <activity android:name=".InfoActivity" />
     </application>
 
 </manifest>

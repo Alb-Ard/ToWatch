@@ -2,4 +2,5 @@
 <resources>
     <dimen name="spacing_top">50dp</dimen>
     <dimen name="spacing_horizontal">50dp</dimen>
+    <dimen name="movie_poster_height">200dp</dimen>
 </resources>

@@ -1,35 +1,24 @@
 package com.albard.towatch.database;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
+import com.albard.towatch.OnActionHandler;
 import com.albard.towatch.moviesapi.MoviesProvider;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-
-import info.movito.themoviedbapi.model.Artwork;
+import java.util.concurrent.TimeUnit;
 
 public class MoviesRepository {
     private final MoviesProvider provider;
     private final MoviesDao moviesDao;
     private final MoviesDatabase database;
-    private final ExecutorService executor;
+    private final ExecutorService databaseExecutor;
+    private final ExecutorService providerExecutor;
 
     public MoviesRepository() {
         if (!MoviesDatabase.isInitialized()) {
@@ -37,19 +26,25 @@ public class MoviesRepository {
         }
 
         this.provider = MoviesProvider.getSingleton();
+        this.providerExecutor = this.provider.getExecutor();
+
         this.database = MoviesDatabase.getSingleton();
-        this.executor = this.database.getExecutor();
+        this.databaseExecutor = this.database.getExecutor();
         this.moviesDao = this.database.getMoviesDao();
     }
 
     public void insertMovie(@NonNull final Movie movie) {
-        this.executor.execute(() -> this.moviesDao.insertMovie(movie));
+        try {
+            this.databaseExecutor.submit(() -> this.moviesDao.insertMovie(movie)).get();
+        } catch (final ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @NonNull
     public List<Movie> getMovies() {
         try {
-            return this.executor.submit(this.moviesDao::getMovies).get();
+            return this.databaseExecutor.submit(this.moviesDao::getMovies).get();
         } catch (final ExecutionException | InterruptedException e) {
             throw new RuntimeException("Exception executing query", e);
         }
@@ -58,18 +53,22 @@ public class MoviesRepository {
     @NonNull
     public Movie getMovie(final int id) {
         try {
-            return this.executor.submit(() -> this.moviesDao.getMovie(id)).get();
+            return this.databaseExecutor.submit(() -> this.moviesDao.getMovie(id)).get();
         } catch (final ExecutionException | InterruptedException e) {
             throw new RuntimeException("Exception executing query", e);
         }
     }
 
     @NonNull
-    public List<Movie> findMovies(@NonNull final String name, final boolean includeAdult) {
-        return this.provider.request(name, includeAdult);
+    public LiveData<List<Movie>> findMovies(@NonNull final String name, final boolean includeAdult) {
+        final MutableLiveData<List<Movie>> result = new MutableLiveData<>();
+        this.providerExecutor.execute(() ->
+                result.postValue(this.provider.findMovies(name, includeAdult))
+        );
+        return result;
     }
 
     public void removeMovie(final int id) {
-        this.executor.execute(() -> this.moviesDao.removeMovie(id));
+        this.databaseExecutor.execute(() -> this.moviesDao.removeMovie(id));
     }
 }

@@ -10,7 +10,9 @@ import androidx.room.RoomDatabase;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Database(version = 1, entities = { Movie.class })
+@Database(version = 1,
+        entities = { Movie.class },
+        exportSchema = false)
 public abstract class MoviesDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "movies_db";
     private static final int THREADS_COUNT = 2;

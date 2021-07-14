@@ -1,5 +1,6 @@
 package com.albard.towatch;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,29 +11,30 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toolbar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.content.res.AppCompatResources;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.albard.towatch.database.Movie;
 import com.albard.towatch.database.MovieImagesRepository;
 import com.albard.towatch.database.MoviesRepository;
 import com.albard.towatch.utilities.ActionBarSetup;
+import com.albard.towatch.utilities.Dialogs;
 import com.albard.towatch.utilities.Fragments;
-
-import java.util.Objects;
+import com.albard.towatch.utilities.NetworkStatusHelper;
+import com.albard.towatch.viewmodels.SelectedMovieViewModel;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class DetailsFragment extends Fragment {
-    private final Movie movie;
-
-    public DetailsFragment(@NonNull final Movie movie) {
-        this.movie = movie;
-    }
+    private final MoviesRepository moviesRepository = new MoviesRepository();
+    private SelectedMovieViewModel selectedMovieViewModel;
+    private FloatingActionButton seenFab;
+    private Movie movie;
 
     @Override
     public void onCreate(@Nullable final Bundle savedInstanceState) {
@@ -42,8 +44,7 @@ public class DetailsFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(@NonNull final Menu menu, @NonNull final MenuInflater inflater) {
-        menu.clear();
-        inflater.inflate(R.menu.details, menu);
+        ActionBarSetup.setupMenu(menu, true, true);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -64,51 +65,97 @@ public class DetailsFragment extends Fragment {
 
         ActionBarSetup.setBackButtonEnabled(activity, true);
 
+        this.selectedMovieViewModel = new ViewModelProvider(activity).get(SelectedMovieViewModel.class);
+        this.movie = this.selectedMovieViewModel.get();
+
         view.<TextView>findViewById(R.id.detailsFragment_movieName_textView).setText(this.movie.getName());
         view.<TextView>findViewById(R.id.detailsFragment_movieDescription_textView).setText(this.movie.getDescription());
 
-        final Bitmap image = MovieImagesRepository.getSingleton().getMoviePoster(this.movie);
+        this.seenFab = view.findViewById(R.id.detailsFragment_setSeen_fab);
+        this.seenFab.setOnClickListener(v -> {
+            if (!this.movie.getSeen()) {
+                SetMovieSeenActivity.start(activity, SetMovieSeenActivity.MASTER, this.movie.getId());
+                return;
+            }
+
+            new AlertDialog.Builder(activity)
+                    .setTitle(activity.getString(R.string.confirm))
+                    .setMessage(R.string.reset_seen_state)
+                    .setNegativeButton(activity.getString(R.string.cancel), (dialog, which) ->
+                            dialog.dismiss()
+                    )
+                    .setPositiveButton(activity.getString(R.string.confirm), (dialog, which) -> {
+                        this.movie.setSeen(false);
+                        this.movie.setSeenWith("");
+                        this.moviesRepository.insertMovie(this.movie);
+                        dialog.dismiss();
+                        this.backToList();
+                    })
+                    .show();
+        });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        final View view = this.requireView();
+        this.movie = this.moviesRepository.getMovie(this.movie.getId());
+        this.selectedMovieViewModel.set(this.movie);
+
+        final Bitmap image = MovieImagesRepository.getSingleton().getMoviePoster(this.movie, NetworkStatusHelper.getContextSingleton().isConnected());
         if (image == null) {
             view.<ImageView>findViewById(R.id.detailsFragment_moviePoster_imageView).setVisibility(View.GONE);
             view.<TextView>findViewById(R.id.detailsFragment_movieDescription_textView).setVisibility(View.VISIBLE);
-            return;
+        } else {
+            view.<ImageView>findViewById(R.id.detailsFragment_moviePoster_imageView).setImageBitmap(image);
         }
-        view.<ImageView>findViewById(R.id.detailsFragment_moviePoster_imageView).setImageBitmap(image);
+
+        final boolean seen = this.movie.getSeen();
+        if (seen) {
+            view.<TextView>findViewById(R.id.detailsFragment_seen_textView).setText(String.format("%s:\n%s", getString(R.string.seen_with), this.movie.getSeenWith()));
+        }
+        this.seenFab.setImageDrawable(AppCompatResources.getDrawable(this.requireActivity(), seen ? R.drawable.ic_unseen_24 : R.drawable.ic_seen_24));
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
+        final FragmentActivity activity = this.requireActivity();
+
         switch (item.getItemId()) {
             case R.id.detailsMenu_delete_menuItem:
                 this.askDeleteConfirmation();
                 return true;
             case R.id.detailsMenu_edit_menuItem:
-                Fragments.switchFragments(this.requireActivity(),
+                Fragments.switchFragments(activity,
                         R.id.mainActivity_parent_containerView,
-                        new EditMovieFragment(this.movie),
+                        new EditMovieFragment(),
                         Fragments.getTransactionName(this, "TO_EDIT"),
                         null);
                 return true;
-            case R.id.detailsMenu_seen_menuItem:
-                return true;
             case android.R.id.home:
-                this.requireActivity().getSupportFragmentManager().popBackStackImmediate();
+                this.backToList();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
+    private void backToList() {
+        this.selectedMovieViewModel.set(null);
+        this.requireActivity().getSupportFragmentManager().popBackStackImmediate();
+    }
+
     private void askDeleteConfirmation() {
         final FragmentActivity activity = this.requireActivity();
-        final AlertDialog confirmDialog = new AlertDialog.Builder(activity).setTitle("Confirm")
-                .setMessage("Are you sure you want to delete this movie?")
-                .setPositiveButton("Confirm", (dialog, which) -> {
+        final AlertDialog confirmDialog = new AlertDialog.Builder(activity).setTitle(activity.getString(R.string.confirm))
+                .setMessage(activity.getString(R.string.confirm_delete))
+                .setPositiveButton(activity.getString(R.string.confirm), (dialog, which) -> {
                     dialog.dismiss();
                     new MoviesRepository().removeMovie(this.movie.getId());
-                    activity.getSupportFragmentManager().popBackStackImmediate();
+                    this.backToList();
                 })
-                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .setNegativeButton(activity.getString(R.string.cancel), (dialog, which) -> dialog.dismiss())
                 .create();
         confirmDialog.show();
     }

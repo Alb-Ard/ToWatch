@@ -1,21 +1,30 @@
 package com.albard.towatch.moviesapi;
 
-import android.app.Activity;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.albard.towatch.BuildConfig;
 import com.albard.towatch.database.Movie;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public abstract class MoviesProvider {
     private static MoviesProvider SINGLETON;
 
+    private final ExecutorService executor;
+
+    public MoviesProvider() {
+        this.executor = Executors.newSingleThreadExecutor();
+    }
+
     @Nullable
-    public abstract List<Movie> request(@NonNull final String name, final boolean includeAdult);
+    public abstract List<Movie> findMovies(@NonNull final String name, final boolean includeAdult);
+
+    public ExecutorService getExecutor() {
+        return this.executor;
+    }
 
     @NonNull
     public static MoviesProvider getSingleton() {

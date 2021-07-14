@@ -10,6 +10,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 
+import com.albard.towatch.utilities.Fragments;
+
 public class FirstStartFragment extends UserSettingsFragment {
     @Nullable
     @Override
@@ -26,9 +28,17 @@ public class FirstStartFragment extends UserSettingsFragment {
             return;
         }
 
-        view.findViewById(R.id.firstStartFragment_confirm_button).setOnClickListener(v -> {
-            this.applySettings();
-            this.startActivity(new Intent(this.requireContext(), MainActivity.class));
-        });
+        view.findViewById(R.id.firstStartFragment_confirm_button).setOnClickListener(v ->
+                this.applySettings()
+        );
+    }
+
+    @Override
+    protected boolean applySettings() {
+        if (!super.applySettings()) {
+            return false;
+        }
+        this.startActivity(new Intent(this.requireContext(), MainActivity.class));
+        return true;
     }
 }
